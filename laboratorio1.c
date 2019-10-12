@@ -5,17 +5,15 @@ typedef struct nodo{
 	int x;
 	int y;
 	int id;
-	int previousId;
 	struct node* next;
 }nodo;
 
-node* createNode(int posX, int posY, int numId, int numPreviousId){
+node* createNode(int posX, int posY, int numId){
 	node *new = NULL;
    	new = (node*)malloc(sizeof(node));
    	new -> x = posX;
    	new -> y = posY;
    	new -> id = numId;
-   	new -> previousId = numPreviousId;
    	new -> next = NULL;
    	return new;
 }
@@ -24,11 +22,11 @@ node* createNode(int posX, int posY, int numId, int numPreviousId){
 //inputs = stack (by reference), position X, position Y 
 void push(node **stack, int posY, int posX){
 	if(*stack == NULL){
-		*stack = crearNodo(posX, posY, 0, -1);
+		*stack = crearNodo(posX, posY, 1, -1);
 	}
 	else{
 		node *aux = *satck;
-		*satck = createNode(posX, posY, (aux->id)++, aux->id);
+		*satck = createNode(posX, posY, (aux->id)++);
 		*stack -> next = aux;
 	}
 }
@@ -85,11 +83,9 @@ void placeFixedLocations(int **matrix, nodo *list){
 //inputs = int matrix, width of Matrix, length of Matrix
 void backtracking(int** matrix, int width, int length){
 	//define variables
-	int column = -1;
-	int maxLocations = 0;
-	int row = 0;
+	int column = -1, maxLocations = 0, row = 0;
+	node *stack = NULL, *maxSolutions = NULL;
 	bool aux = TRUE;
-	nodo *stack = NULL;
 
 	//define maximum number of locations
 	if (width > length)
@@ -97,43 +93,36 @@ void backtracking(int** matrix, int width, int length){
 	else
 		maxLocations = width;
 
-	//if matrix == 2x2 matrix
-	if ((width == length) && (width == 2)){
-		// exist only one location possible
-		push(&stack, 0, 0);
-		row = -1;
-	}
-
-	//if matrix == 3x3 matrix
-	if ((width == length) && (width == 3)){
-		//exist only two locations possible
-		push(&stack, 0, 0);
-		push(&stack, 1, 2);
-		row = -1;
-	}
-
 	// while current row is valid
 	while (row >= 0){
+		
+		//if current row is occupied by fixed Location
+		while(rowNotAvailable(stack, row)){
+			//move on to the next row
+			row++;
+		}
+
 		//do
-		do
-		{	
+		do{	
 			//move on to next column
 			column++;
 			//check if a branchOffice can be built in current location
-			aux = checkPosition(matrix, row, column);
+			aux = checkPosition(stack, row, column);
   		  //while current column is valid and current location isn't avaiable to build
 		} while ((column < width) && not(aux))
 		
 		// if current column is valid
 		if (column < width){
-			// save position in matrix
-			matrix[row][column] = 1;
-
 			// save location in stack
 			push(&stack, row, column);
 			
 			// if current row == last row  or  length of stack == max number of locations
-			if (row == length-1 || lengthStack(stack) == maxLocations){
+			if (row == length-1 || lengthList(stack) == maxLocations){
+				//free maxSolution
+				freeList(maxSolution);
+				//save stack as maxSolution
+				saveSolution(stack, &maxSolution);
+
 				// finish while
 				row = -1;
 			}
@@ -147,15 +136,66 @@ void backtracking(int** matrix, int width, int length){
 		}
 		// if current column is not valid 
 		else{
-			// delete last location in stack
+			//if size of maxSolution < size of stack
+			if(lengthList(maxSolutions) < lengthList(stack)){
+				//free maxSolution
+				freeList(maxSolution);
+				//save stack as maxSolution
+				saveSolution(stack, &maxSolution);
+			}
 			pop(&stack);
 			//go back to previous row
-			k--;
+			row--;
+			while(rowNotAvailable(stack, row)){
+				row--;
+			}
 		}
 	}
 	printStack(stack);
 }
 
+int lengthList(node *list){
+	if(list == NULL){
+		return 0;
+	}
+	return list->id;
+}
+
+bool checkPosition(node *stack, int row, int column){
+	while(stack != NULL){
+		if((stack->x == column) || (stack->y == row) || (abs(column - stack->x) == abs(row - stack->y))){
+			return FALSE;
+		}
+		stack = stack->next;
+	}
+	return TRUE;
+}
+
+bool rowNotAvailable(node *stack, int row){
+	while(stack != NULL){
+		if(stack->x == row)
+			return TRUE;
+	}
+	return FALSE;
+}
+
+void saveSolution(node *sourceList, node **destinationList){
+	while(sourceList != NULL){
+		push(destinationList, sourceList->x, sourceList->y);
+		sourceList = sourceList->next;
+	}
+}
+
+void freeList(node **list){
+	node *aux = NULL;
+
+	while(*list != NULL){
+		aux = *list;
+		*list = *list->next;
+		free(aux);
+	}
+
+}
 void printStack(node *stack){
 	while(stack != NULL){
 		printf("x = %d || y = %d || id = %d\n", stack->x, stack->y, stack-> id);
