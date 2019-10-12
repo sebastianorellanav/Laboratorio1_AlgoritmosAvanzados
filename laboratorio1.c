@@ -81,11 +81,19 @@ void placeFixedLocations(int **matrix, nodo *list){
 
 //backtracking algorithm: search the max number of locations possibles and return them
 //inputs = int matrix, width of Matrix, length of Matrix
-void backtracking(int** matrix, int width, int length){
+node *backtracking(int** matrix, int width, int length, node *fixedLocations){
 	//define variables
 	int column = -1, maxLocations = 0, row = 0;
 	node *stack = NULL, *maxSolutions = NULL;
 	bool aux = TRUE;
+
+	// if exist some fixed locations (positions that cant change)
+	if(fixedLocations != NULL){
+		// save the positions in stack
+		saveSolution(fixedLocations, stack);
+		// free fixed locations
+		freeList(&fixedLocations);
+	}
 
 	//define maximum number of locations
 	if (width > length)
@@ -119,7 +127,7 @@ void backtracking(int** matrix, int width, int length){
 			// if current row == last row  or  length of stack == max number of locations
 			if (row == length-1 || lengthList(stack) == maxLocations){
 				//free maxSolution
-				freeList(maxSolution);
+				freeList(&maxSolution);
 				//save stack as maxSolution
 				saveSolution(stack, &maxSolution);
 
@@ -139,56 +147,84 @@ void backtracking(int** matrix, int width, int length){
 			//if size of maxSolution < size of stack
 			if(lengthList(maxSolutions) < lengthList(stack)){
 				//free maxSolution
-				freeList(maxSolution);
+				freeList(&maxSolution);
 				//save stack as maxSolution
 				saveSolution(stack, &maxSolution);
 			}
+			// remove an element from stack
 			pop(&stack);
 			//go back to previous row
 			row--;
+			//if current row is occupied by fixed Location
 			while(rowNotAvailable(stack, row)){
+				//go back to the preious row
 				row--;
 			}
 		}
 	}
 	printStack(stack);
+	return maxSolution;
 }
 
+// this function returns the length of a list
+// inputs = list pointer
 int lengthList(node *list){
+	// if list is empty
 	if(list == NULL){
+		// length is 0
 		return 0;
 	}
+	//in other case return the id of the last element in stack
 	return list->id;
 }
 
+// this function returns true if the position (column, row) is available
+// inputs = stack pointer, row , column
 bool checkPosition(node *stack, int row, int column){
+	//for all elements in stack
 	while(stack != NULL){
+		//if the position (column,row) is not available
 		if((stack->x == column) || (stack->y == row) || (abs(column - stack->x) == abs(row - stack->y))){
 			return FALSE;
 		}
+		//move on to the next element
 		stack = stack->next;
 	}
+	// in other case return true
 	return TRUE;
 }
 
+// this function returns true if the given list is not available to build a location
+// inputs = stack pointer, row
 bool rowNotAvailable(node *stack, int row){
+	// for all elements in stack
 	while(stack != NULL){
+		// if the row is not available
 		if(stack->x == row)
 			return TRUE;
 	}
+	//in other case return false
 	return FALSE;
 }
 
+// this function save the current stack in other linked-list
+// inputs = source stack, destination List
 void saveSolution(node *sourceList, node **destinationList){
+	//for all elements in stack
 	while(sourceList != NULL){
+		//add element to destination List
 		push(destinationList, sourceList->x, sourceList->y);
+		//move on to the next element
 		sourceList = sourceList->next;
 	}
 }
 
+//this function free the given list's memory
+//inputs = double list pointer (a list by reference)
 void freeList(node **list){
+	//create an auxiliar (index)
 	node *aux = NULL;
-
+	//for all elements in list
 	while(*list != NULL){
 		aux = *list;
 		*list = *list->next;
@@ -196,6 +232,8 @@ void freeList(node **list){
 	}
 
 }
+
+//this function print the given list
 void printStack(node *stack){
 	while(stack != NULL){
 		printf("x = %d || y = %d || id = %d\n", stack->x, stack->y, stack-> id);
@@ -203,52 +241,18 @@ void printStack(node *stack){
 	}
 }
 
-
-/*
-X = matriz[n][n]
-X[1] = 0
-k = 1
-mientras k > 0
-	repetir
-		X[k] = X[k] + 1
-	(hasta X[k] > n) o (colocar(X[k],k,X))
-	si (X[k] <= n) entonces
-		si (k = n) entonces escribir(X)
-		si no k = k+1
-			X(k) = 0
-	si no k = k-1
-
-	funcion colocar = determina si se puede o no colcoar la reinas
-*/
-
-
 void main(){
 	//define variables
 	int widthMatrix = 0;
 	int lengthMatrix = 0;
 	char *fileName = "entrada.in";
-	node *list = NULL;
+	node *fixedLocations = NULL;
 	
 	//read input file
-	readFile(fileName, &list,  &widthMatrix, &lengthMatrix);
-
-	//create matrix
-	matrix = (int**)malloc(lengthMatrix*sizeof(int*));
-	for (int i = 0 ; i < lengthMatrix ; i++)
-    	matrix[i] = (int *) malloc (widthMatrix*sizeof(int));
-
-    //inicializate matrix with 0s
-    for (int i = 0; i < lengthMatrix; ++i)    {
-    	for (int j = 0; i < widthMatrix; ++j){
-    		matrix[i][j] = 0;
-    	}
-    }
-
-    //placed the location that cant change 
-    placeFixedLocations(matriz, lista);
+	readFile(fileName, &fixedLocations,  &widthMatrix, &lengthMatrix);
 
     //search the solution
-    backtracking(matrix, widthMatrix, lengthMatrix);
+    backtracking(matrix, widthMatrix, lengthMatrix, fixedLocations);
 
     return 0;
 	}
