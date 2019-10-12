@@ -66,22 +66,11 @@ void readFile(char *fileName, nodo **list, int *widthMatrix, int *lengthMatrix){
   		fscanf(archive, "%d", &aux2);
   		push(list, aux1, aux2);
   	}
-
-
-}
-
-//place the locations that cant change in the matrix
-//inputs = int matrix, list
-void placeFixedLocations(int **matrix, nodo *list){
-	node *aux = list;
-	while(aux != NULL){
-		matrix[aux->y][aux->x] = 2;
-	}
 }
 
 //backtracking algorithm: search the max number of locations possibles and return them
-//inputs = int matrix, width of Matrix, length of Matrix
-node *backtracking(int** matrix, int width, int length, node *fixedLocations){
+//inputs = width of Matrix, length of Matrix
+node *backtracking(int width, int length, node *fixedLocations){
 	//define variables
 	int column = -1, maxLocations = 0, row = 0;
 	node *stack = NULL, *maxSolutions = NULL;
@@ -252,7 +241,7 @@ void main(){
 	readFile(fileName, &fixedLocations,  &widthMatrix, &lengthMatrix);
 
     //search the solution
-    backtracking(matrix, widthMatrix, lengthMatrix, fixedLocations);
+    backtracking(widthMatrix, lengthMatrix, fixedLocations);
 
     return 0;
 	}
