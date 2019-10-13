@@ -1,44 +1,63 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+//struct node of a linked list
 typedef struct node{
 	int x;
 	int y;
 	int id;
-	int fixLocation;
 	struct node* next;
 }node;
 
+//function to create a new node of linked list
+//inputs = position X, position Y, id 
 node* createNode(int posX, int posY, int numId){
+	//create a new node
 	node *new = NULL;
+	//get memory for new node
    	new = (node*)malloc(sizeof(node));
+   	//set attributes of new node with parameters
    	new -> x = posX;
    	new -> y = posY;
    	new -> id = numId;
-   	new -> fixLocation = 0;
    	new -> next = NULL;
+   	//return new node
    	return new;
 }
 
 //function to add an element to stack
 //inputs = stack (by reference), position X, position Y 
 void push(node **stack, int posY, int posX){
+	//define lastId
 	int lastId = 0;
+
+	//if stack is empty
 	if(*stack == NULL){
+		//stack pointer points to new node
 		*stack = createNode(posX, posY, 1);
 	}
+	//in other case
 	else{
+		//create an auxiliar node to point to the rest of stack
 		node *aux = *stack;
+		//define last id 
 		lastId = aux->id;
 		lastId++;
+		//create a new node and add on top 
 		*stack = createNode(posX, posY, lastId);
+		//stack pointer points to the rest of stack
 		(*stack)->next = aux;
 	}
 }
 
+//function to remove last element in stack
+//inputs = stack (by reference)
 void pop(node **stack){
+	//create an auxiliar node to save the rest of stack
 	node *aux = (*stack)->next;
+	//free last element 
 	free(*stack);
+	//stack pointer = rest of stack
 	*stack = aux;
 }
 
@@ -71,6 +90,7 @@ void readFile(char *fileName, node **list, int *widthMatrix, int *lengthMatrix){
   		fscanf(archive, "%d", &aux2);
   		push(list, aux2, aux1);
   	}
+  	fclose(archive);
 }
 
 // this function returns the length of a list
@@ -98,21 +118,6 @@ int checkPosition(node *stack, int row, int column){
 		stack = stack->next;
 	}
 	// in other case return true
-	return 0;
-}
-
-// this function returns true if the given list is not available to build a location
-// inputs = stack pointer, row
-int rowNotAvailable(node *stack, int row){
-	// for all elements in stack
-	while(stack != NULL){
-		// if the row is not available
-		if(stack->y == row && stack->fixLocation == 1)
-			return 1;
-		//move on to the next element
-		stack = stack->next;
-	}
-	//in other case return false
 	return 0;
 }
 
@@ -154,18 +159,17 @@ void printStack(node *stack){
 
 //backtracking algorithm: search the max number of locations possibles and return them
 //inputs = width of Matrix, length of Matrix
-node *backtracking(int width, int length, node *fixedLocations){
+void backtracking(int width, int length, node *fixedLocations, node **maxSolution){
 	//define variables
-	int column = -1, maxLocations = 0, row = 0, validPosition = 0, flagFixedLocations = 0;
-	node *stack = NULL, *maxSolution = NULL;
+	int column = -1, maxLocations = 0, row = 0, invalidPosition = 0, numberFixedLocations = 0;
+	node *stack = NULL;
 
 	// if exist some fixed locations (positions that cant change)
 	if(fixedLocations != NULL){
 		// save the positions in stack
 		saveSolution(fixedLocations, &stack);
-		// free fixed locations
-		freeList(&fixedLocations);
-		flagFixedLocations = 1;
+		//save number of fixed locations
+		numberFixedLocations = lengthList(fixedLocations);
 	}
 
 	//define maximum number of locations
@@ -173,91 +177,93 @@ node *backtracking(int width, int length, node *fixedLocations){
 		maxLocations = length;
 	else
 		maxLocations = width;
-	
-	if(maxLocations == 3 || maxLocations == 2)
-		maxLocations--;
 
 	// while current row is valid
 	while (row >= 0){
-		//if current row is occupied by fixed Location
-		while(rowNotAvailable(stack, row)){
-			printf("row not available by fixed locations\n");
-			//move on to the next row
-			row++;
-		}
-		//do
+		//check if exist a valid column in current row
 		do{	
 			//move on to next column
 			column++;
 			//check if a branchOffice can be built in current location
-			validPosition = checkPosition(stack, row, column);
+			invalidPosition = checkPosition(stack, row, column);
   		  //while current column is valid and current location isn't avaiable to build
-		} while ((column < width) && validPosition);
+		} while ((column < width) && invalidPosition);
 		
 		// if current column is valid
-		if (column < width && row < length){
-			printf("posible location = (%d,%d)\n", column, row);
+		if (column < width){
 			// save location in stack
 			push(&stack, row, column);
-			printStack(stack);
-			// if current row == last row  or  length of stack == max number of locations
-			if (row == length-1 || lengthList(stack) == maxLocations){
-				printf("termina aqui?\n");
-				//free maxSolution
-				freeList(&maxSolution);
-				//save stack as maxSolution
-				saveSolution(stack, &maxSolution);
+		}
 
-				// finish while
+		//move on to the next row
+		row++;
+		//set column as -1
+		column = -1;
+
+		// if current row is out of matrix
+		if (row > length-1){
+				//if quantity of elements of max Solution is equal to max possible locations
+			if( lengthList(*maxSolution) == maxLocations ||
+			 	//or if quantity of elements of stack is equal to number of fixed locations
+			 	lengthList(stack) == numberFixedLocations||
+			 	//or if quantity of elements of stack is equal to cero
+			 	lengthList(stack) == 0){
+				//stop searching
 				row = -1;
 			}
-			// if current row != last row
+			//in other case 
 			else{
-				//move on to the next row
-				row++;
-				//go back before the first column
-				column = -1;
-			}
-		}
-
-		// if current column is not valid 
-		else{
-			printf("entra en: if current column is not valid  \n");
-			//if size of maxSolution < size of stack
-			if(lengthList(maxSolution) < lengthList(stack)){
-				printf("entra en cambiar maximo encontrado\n");
-				//free maxSolution
-				freeList(&maxSolution);
-				//save stack as maxSolution
-				saveSolution(stack, &maxSolution);
-				printf("\n\nmax solution:\n");
-				printStack(maxSolution);
-			}
-			if(flagFixedLocations == 1){
-				row++;
-				column = -1;
-				flagFixedLocations = 0;
-			}
-			else{
-				// remove an element from stack
-				printf("\n\nstack : \n");
-				printStack(stack);
-				//go back to previous row
-				row--;
-				column = stack->x;
-				pop(&stack);
-				//if current row is occupied by fixed Location
-				while(rowNotAvailable(stack, row)){
-					printf("entra en el segundo row is not available\n");
-					//go back to the preious row
-					row--;
+				//if size of maxSolution < size of stack
+				if(lengthList(*maxSolution) < lengthList(stack)){
+					//free maxSolution
+					freeList(maxSolution);
+					//save stack as maxSolution
+					saveSolution(stack, maxSolution);
 				}
+				//go back to the last element in stack
+				row = stack->y;
+				column = stack->x;
+				//and remove it
+				pop(&stack);
 			}
 		}
-		printf("row = %d\n", row);
 	}
-	printStack(stack);
-	return maxSolution;
+	printStack(*maxSolution);
+}
+
+void writeFile(int width, int length, node *solution){
+	char **matrix;
+	matrix = (char **)malloc (length*sizeof(char *));
+	for (int i = 0 ; i < length ; i++)
+		matrix[i] = (char *) malloc (width*sizeof(char));
+	
+	for (int i = 0; i < length; ++i){
+		for (int j = 0; j < width; ++j){
+			matrix[i][j] = '_';
+		}
+	}
+
+	FILE *txtOut;
+ 	txtOut = fopen ("salida.out", "w" );
+ 	fprintf(txtOut, "%d\n", lengthList(solution));
+
+ 	while(solution != NULL){
+		matrix[solution->y][solution->x] = 'x';
+		fprintf(txtOut, "%d%s%d %s", solution->y, "-", solution->x, " || ");
+		solution = solution->next;
+	}
+
+	fprintf(txtOut, "\n\n");
+
+	for (int i = 0; i < length; ++i){
+		for (int j = 0; j < width; ++j){
+			fprintf(txtOut, "%c%c", matrix[i][j], ' ');
+		}
+		fputc('\n', txtOut);
+	}
+
+ 	fclose(txtOut);
+
 }
 
 int main(int argc, char *argv[]){
@@ -279,19 +285,16 @@ int main(int argc, char *argv[]){
 	int lengthMatrix = 0;
 	char *fileName = argv[1];
 	node *fixedLocations = NULL;
+	node *maxSolution = NULL;
 	
 	//read input file
 	readFile(fileName, &fixedLocations,  &widthMatrix, &lengthMatrix);
 
-	node *aux = fixedLocations;
-	while(aux != NULL){
-		aux->fixLocation = 1;
-		aux = aux->next;
-	}
-
-	printStack(fixedLocations);
     //search the solution
-    backtracking(widthMatrix, lengthMatrix, fixedLocations);
+    backtracking(widthMatrix, lengthMatrix, fixedLocations, &maxSolution);
+
+    //write file with found solution
+    writeFile(widthMatrix, lengthMatrix, maxSolution);
 
     return 0;
 	}
