@@ -24,18 +24,19 @@ int main(int argc, char *argv[]){
 	//define variables
 	int widthMatrix = 0;
 	int lengthMatrix = 0;
-	char *fileName = argv[1];
+	char *inputFileName = argv[1];
+	char *outputFileName = argv[2];
 	node *fixedLocations = NULL;
 	node *maxSolution = NULL;
 	
 	//read input file
-	readFile(fileName, &fixedLocations,  &widthMatrix, &lengthMatrix);
+	readFile(inputFileName, &fixedLocations,  &widthMatrix, &lengthMatrix);
 
     //search the solution
     backtracking(widthMatrix, lengthMatrix, fixedLocations, &maxSolution);
 
     //write file with found solution
-    writeFile(widthMatrix, lengthMatrix, maxSolution);
+    writeFile(outputFileName, widthMatrix, lengthMatrix, maxSolution);
 
     //free lists
     freeList(&maxSolution);

@@ -6,7 +6,7 @@
 
 //function to write results in file
 //inputs = width matrix, length matrix, solution list
-void writeFile(int width, int length, node *solution){
+void writeFile(char *fileName, int width, int length, node *solution){
 	char **matrix;
 	matrix = (char **)malloc (length*sizeof(char *));
 	for (int i = 0 ; i < length ; i++)
@@ -19,7 +19,7 @@ void writeFile(int width, int length, node *solution){
 	}
 
 	FILE *txtOut;
- 	txtOut = fopen ("salida.out", "w" );
+ 	txtOut = fopen (fileName, "w" );
  	fprintf(txtOut, "%d\n", lengthList(solution));
 
  	while(solution != NULL){
