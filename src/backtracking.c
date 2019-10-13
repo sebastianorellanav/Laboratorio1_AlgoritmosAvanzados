@@ -43,7 +43,7 @@ void backtracking(int width, int length, node *fixedLocations, node **maxSolutio
 			push(&stack, row, column);
 
 			#ifdef DEBUG
-			printCurrent(stack, maxSolution, iter, row, lengthList(stack), row, lengthList(maxSolution));
+			printCurrent(stack, *maxSolution, iter, row, lengthList(stack), row, lengthList(*maxSolution));
 			#endif
 		}
 
@@ -78,7 +78,7 @@ void backtracking(int width, int length, node *fixedLocations, node **maxSolutio
 				//and remove it
 				pop(&stack);
 				#ifdef DEBUG
-				printCurrent(stack, maxSolution, iter, row, lengthList(stack), row, lengthList(maxSolution));
+				printCurrent(stack, *maxSolution, iter, row, lengthList(stack), row, lengthList(*maxSolution));
 				#endif
 			}
 		}
