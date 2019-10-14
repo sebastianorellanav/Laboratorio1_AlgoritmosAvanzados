@@ -1,5 +1,6 @@
 #ifndef STRUCTS_H
 #define STRUCTS_H
+
 //struct node of a linked list
 typedef struct node{
 	int x;
@@ -7,4 +8,5 @@ typedef struct node{
 	int id;
 	struct node* next;
 }node;
+
 #endif
