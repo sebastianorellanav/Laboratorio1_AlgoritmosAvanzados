@@ -47,10 +47,12 @@ void backtracking(int width, int length, node *fixedLocations, node **maxSolutio
 			#endif
 		}
 
-		//move on to the next row
-		row++;
-		//set column as -1
-		column = -1;
+		if(row >= 0 && row <= length){
+			//move on to the next row
+			row++;
+			//set column as -1
+			column = -1;
+		}
 
 		// if current row is out of matrix
 		if (row > length-1){
